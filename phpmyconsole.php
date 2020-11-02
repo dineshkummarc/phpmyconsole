@@ -13,7 +13,7 @@ $end_code="<script type=\"text/javascript\">"
 
 function PhpMyConsole_Version()
 	{
-		return '1.0a';
+		return '2.0a';
 	}
 function PhpMyConsole_login_form($msg='')
 	{
@@ -34,7 +34,7 @@ function PhpMyConsole_login()
 	{
 		if(isset($_POST['host']) && isset($_POST['user']) && isset($_POST['password']))
 		{
-			if(!$r=mysql_connect($_POST['host'],$_POST['user'],$_POST['password']))
+			if(!$r=($GLOBALS["___mysqli_ston"] = mysqli_connect($_POST['host'], $_POST['user'], $_POST['password'])))
 				PhpMyConsole_login_form();
 			$_SESSION['host']=$_POST['host'];
 			$_SESSION['user']=$_POST['user'];
@@ -43,7 +43,7 @@ function PhpMyConsole_login()
 
 		}elseif(isset($_SESSION['host']) && isset($_SESSION['user']) && isset($_SESSION['password']))
 		{
-			if(!$r=mysql_connect($_SESSION['host'],$_SESSION['user'],$_SESSION['password']))
+			if(!$r=($GLOBALS["___mysqli_ston"] = mysqli_connect($_SESSION['host'], $_SESSION['user'], $_SESSION['password'])))
 				PhpMyConsole_login_form();
 			$_SESSION['rid']=$r;
 		}else
@@ -82,24 +82,24 @@ function PhpMyConsole_cmd()
 			if(get_magic_quotes_gpc())
   				$sql=stripslashes($sql);
 		    if(empty($sql)) next;
-    		if(!$r=mysql_query($sql,$_SESSION['rid']))
+    		if(!$r=mysqli_query($_SESSION['rid'], $sql))
     		{
-    			$output='mysql[<b>'.$_SESSION['host'].'</b>]&gt;<b><font color="red">'.mysql_error().'</font></b>';
+    			$output='mysql[<b>'.$_SESSION['host'].'</b>]&gt;<b><font color="red">'.mysqli_error($GLOBALS["___mysqli_ston"]).'</font></b>';
     		}else
     		{
     			switch(PhpMyConsole_getCmdType($sql))
     			{
     				case 0:
-    					if(mysql_affected_rows($_SESSION['rid'])==-1)
+    					if(mysqli_affected_rows($_SESSION['rid'])==-1)
     						$output='mysql[<b>'.$_SESSION['host'].'</b>]&gt;ERROR';
     					else
-    						$output='mysql[<b>'.$_SESSION['host'].'</b>]&gt;OK<br/>mysql[<b>'.$_SESSION['host'].'</b>]&gt;Affected rows:'.mysql_affected_rows($_SESSION['rid']);
-    					$output.=mysql_info($_SESSION['rid']);
+    						$output='mysql[<b>'.$_SESSION['host'].'</b>]&gt;OK<br/>mysql[<b>'.$_SESSION['host'].'</b>]&gt;Affected rows:'.mysqli_affected_rows($_SESSION['rid']);
+    					$output.=mysqli_info($_SESSION['rid']);
 					break;
 					case 1:
-    				if(mysql_num_rows($r)>0)
+    				if(mysqli_num_rows($r)>0)
     				{
-    					$row=mysql_fetch_assoc($r);
+    					$row=mysqli_fetch_assoc($r);
     					$output='mysql[<b>'.$_SESSION['host'].'</b>]&gt;<table border="1"><tr style="background:white;color:black;">';
     					$line='<tr>';
     					foreach($row as $name=>$value)
@@ -110,14 +110,14 @@ function PhpMyConsole_cmd()
     					$line.='</tr>';
     					$output.='</tr>';
     					$output.=$line;
-    					while($row=mysql_fetch_assoc($r))
+    					while($row=mysqli_fetch_assoc($r))
     					{
     						$output.='<tr>';
     						foreach($row as $name=>$value)
     							$output.='<td>'.$value.'</td>';
     						$output.='</tr>';
     					}
-    					$output.='</table><br/>mysql[<b>'.$_SESSION['host'].'</b>]&gt;Rows count:'.mysql_num_rows($r);
+    					$output.='</table><br/>mysql[<b>'.$_SESSION['host'].'</b>]&gt;Rows count:'.mysqli_num_rows($r);
     				}
     				break;
     				case 2:
@@ -149,7 +149,7 @@ body{
 	border-width:1px;
 	padding:10px;
 	margin:0 auto;
-	width:800px;
+	width:98%;
 	}
 #console_io{
 	color:#FFFFFF;
@@ -157,7 +157,7 @@ body{
 	font-family:Terminal;
 	font-size:14px;
 	border-width:0px;
-	width:800px;
+	width:100%;
 	height:250px;
 	overflow:auto;
 	}
@@ -197,11 +197,11 @@ Size:
 <br/>
 <div id="console_io">
 <b>Wajox PhpMyConsole <?=PhpMyConsole_Version();?> (c)2009 Wajox (http://wajox.myglonet.com)</b><br/>
-MySQL INFO:<br/>
--&gt;Host: <?=mysql_get_host_info($_SESSION['rid']);?><br/>
--&gt;Server: <?=mysql_get_server_info($_SESSION['rid']);?><br/>
--&gt;Client: <?=mysql_get_client_info();?><br/>
--&gt;Protocol: <?=mysql_get_proto_info($_SESSION['rid']);?><br/>
+mysql INFO:<br/>
+-&gt;Host: <?=((is_null($___mysqli_res = mysqli_get_host_info($_SESSION['rid']))) ? false : $___mysqli_res);?><br/>
+-&gt;Server: <?=((is_null($___mysqli_res = mysqli_get_server_info($_SESSION['rid']))) ? false : $___mysqli_res);?><br/>
+-&gt;Client: <?=mysqli_get_client_info();?><br/>
+-&gt;Protocol: <?=((is_null($___mysqli_res = mysqli_get_proto_info($_SESSION['rid']))) ? false : $___mysqli_res);?><br/>
 </div><br/>
 <form action="phpmyconsole.php" method="post" target="frame">
 <textarea name="cmd" id="cmd_line" OnFocus="if(this.value=='Insert SQL query...')this.value='';">Insert SQL query...</textarea>
